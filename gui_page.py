@@ -7,7 +7,7 @@ from numpy import float64
 import threading
 import Speedometer as sm
 
-NOTES_FREQUENCIES = {
+FREQUENCIES = {
     'E1': 82.41,
     'A': 110.00,
     'D': 146.83,
@@ -17,15 +17,15 @@ NOTES_FREQUENCIES = {
 
 }
 
-FREQUENCIES = {
-    'E1': 82.41,#324.26517155310506 ,
-    'A': 110.00,#630.0008979078747
-    'D': 146.83,#512.7914401972141,
-    'G': 98.00044444444447,#588.00,#612.5008937508936 
-    'B': 125.28429543818312,
-    'E6': 165.78972599283443,
+# FREQUENCIES = {
+#     'E1': 82.41,#324.26517155310506 ,
+#     'A': 110.00,#630.0008979078747
+#     'D': 146.83,#512.7914401972141,
+#     'G': 98.00044444444447,#588.00,#612.5008937508936 
+#     'B': 125.28429543818312,
+#     'E6': 165.78972599283443,
 
-}
+# }
 
 #Global constants
 SAMPLE_RATE = 44100  
@@ -69,19 +69,23 @@ def record_fn():
       busy_processing = True
       audio_signal, wav_file = apc.record_audio(DURATION, SAMPLE_RATE, 2, float64)
       deviation_perc, deviation, return_status, return_string =apc.find_deviation_ceps(wav_file,frequency_selected, SAMPLE_RATE)
+
       # If Application is closed while recording, do not display deviation result
       if (not close_requested):
-        if (return_status != "Skip"):
-          if (return_status == "In Tune" ):
-            #display_deviation_label1.configure(text=return_status)
-            display_deviation_label1.configure(image=tick_image)  
-          else : 
-            display_deviation_label1.configure(image=wrong_image)
-            
-          display_deviation_label2.configure(text=return_string)
-          display_deviation_label1.update()
-          display_deviation_label2.update()
-          speedometer.update_needle(deviation_perc)
+        # we are checking for is_toggled again to handle case
+        # when Stop button is clicked while recording
+        if (is_toggled):
+          if (return_status != "Skip"):
+            if (return_status == "In Tune" ):
+              #display_deviation_label1.configure(text=return_status)
+              display_deviation_label1.configure(image=tick_image)  
+            else : 
+              display_deviation_label1.configure(image=wrong_image)
+              
+            display_deviation_label2.configure(text=return_string)
+            display_deviation_label1.update()
+            display_deviation_label2.update()
+            speedometer.update_needle(deviation_perc)
     else:#Stops the Thread
       busy_processing = False
       record_thread = None
@@ -115,6 +119,8 @@ def toggle(button,key):
   if is_toggled:
     #record_threading_fn("STOP")
     button.configure(text=key,fg_color="#9DBBAE")
+    speedometer.update_needle(0)
+    speedometer.update()
   else: #Start Recording
     button.configure(text="Stop", fg_color="#9DBBAE")
     button_click(key)
@@ -134,7 +140,7 @@ app.protocol("WM_DELETE_WINDOW", close_window)
 # Set the application properties
 app.geometry("600x600")
 app.title("Guitar Tuner")
-app.resizable(False, False)
+app.resizable(False, True)
 openstack_icon = app.iconbitmap('guitar.ico')
 
 #Split the screen into 2 Outer Frames - One for Buttons and Guitar - Second for Displaying Deviation
@@ -174,21 +180,26 @@ display_frame2=ctk.CTkFrame(outer_frame_2, width=175, height=200, fg_color="#779
 #display_frame2.grid(row=0, column=2)
 display_frame2.pack(fill="both", expand=True, side="left")
 
+#Create Font
+font_tmp = ctk.CTkFont("Helvetica", size=15, weight="bold")
+
 #Create speedometer
+speedometer_label1 = ctk.CTkLabel(speedometer_frame, width=145, height= 25, text="Tuning Display", fg_color= "#C9CAD9", justify="center", font=font_tmp)
+speedometer_label1.place(relx=0.2, rely=0.05)
+
 speedometer = sm.Speedometer(speedometer_frame, width=220, height=220)
 #speedometer.pack(fill="both", expand=True, anchor="center" )
 #speedometer.grid(row=0, column=0, sticky="center")
 speedometer.place(relx=0.2, rely=0.2)
 
 # Create a label to display the String selected and its frequency
-font_tmp = ctk.CTkFont("Helvetica", size=15, weight="bold")
 display_label1 = ctk.CTkLabel(display_frame1, width=150, height= 40, text="String Selected   :  ", fg_color= "#C9CAD9", anchor="w", font=font_tmp)
 display_label1.place(relx=0.07, rely=0.10)
-display_string_label1 = ctk.CTkLabel(display_frame1, width=150, height= 40, text="                       ", fg_color= "#D1D2F9", anchor="w", font=font_tmp)
+display_string_label1 = ctk.CTkLabel(display_frame1, width=150, height= 40, text="                       ", fg_color= "#D1D2F9", text_color="red", justify="center", font=font_tmp)
 display_string_label1.place(relx=0.07, rely=0.30)
 display_label2 = ctk.CTkLabel(display_frame1, width=150, height= 40, text="Standard Frequency : ", fg_color= "#C9CAD9", anchor="w", font=font_tmp)
 display_label2.place(relx=0.07, rely=0.50)
-display_string_label2 = ctk.CTkLabel(display_frame1, width=150, height= 40, text="                       ", fg_color= "#D1D2F9", anchor="w", font=font_tmp)
+display_string_label2 = ctk.CTkLabel(display_frame1, width=150, height= 40, text="                       ", fg_color= "#D1D2F9", text_color="red", justify="center",font=font_tmp)
 display_string_label2.place(relx=0.07, rely=0.70)
 
 
