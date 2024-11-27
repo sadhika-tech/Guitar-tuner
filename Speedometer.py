@@ -7,11 +7,6 @@ NEEDLE_FILL = "#C9CAD9"
 class Speedometer(tk.Canvas):
     def __init__(self, master=None, **kwargs):
         super().__init__(master, **kwargs)
-        x_pos_from = 110
-        y_pos_from = 110
-        x_pos_to = 110
-        y_pos_to = 30
-
 
         self.canvas = tk.Canvas(self, width = 210, height = 210, bg = "#C9CAD9")
         #self.canvas.place(relx=0.0, rely=0.0, fill)
@@ -28,9 +23,8 @@ class Speedometer(tk.Canvas):
         self.needle.update()
 
     def update_needle_coords(self, new_x, new_y):
-        self.canvas.itemconfigure(self.needle, )
         self.canvas.coords(self.needle, 110, 110, new_x, new_y )
-
+    # Here value = Deviation percentage
     def update_needle(self, value):
         #Modify for 50 being the center
         if (abs(value) <= 50):
